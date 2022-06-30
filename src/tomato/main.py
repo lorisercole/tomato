@@ -3,6 +3,7 @@ Main module - executables for tomato.
 
 """
 import argparse
+import subprocess
 import logging
 import psutil
 import os
@@ -78,7 +79,7 @@ def run_tomato():
     args = parser.parse_args()
     _logging_setup(args)
 
-    ppid = os.getppid()  # On Windows, tomato.exe is the parent of os.getpid()
+    ppid = os.getppid() if subprocess._mswindows else os.getpid()  # On Windows, tomato.exe is the parent of os.getpid()
     toms = [
         p.pid for p in psutil.process_iter() if p.name() in {"tomato", "tomato.exe"}
     ]

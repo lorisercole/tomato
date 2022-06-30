@@ -4,15 +4,17 @@ import psutil
 import signal
 import os
 
-
 def run_casename(casename: str, jobname: str = None) -> str:
-    cfg = subprocess.CREATE_NEW_PROCESS_GROUP
-    proc = subprocess.Popen(["tomato", "-t", "-vv"], creationflags=cfg)
+    if subprocess._mswindows:
+        cfg = subprocess.CREATE_NEW_PROCESS_GROUP
+        proc = subprocess.Popen(["tomato", "-t", "-vv"], creationflags=cfg)
+    else:
+        proc = subprocess.Popen(["tomato", "-t", "-vv"], preexec_fn=os.setpgrp, close_fds=True)
     p = psutil.Process(pid=proc.pid)
     while not os.path.exists("database.db"):
         time.sleep(0.1)
     subprocess.run(["ketchup", "-t", "load", casename, "dummy-10", "-vv"])
-    args = ["ketchup", "-t", "submit", f"{casename}.yml", "dummy-10", "-vv"]
+    args = ["ketchup", "-t", "submit", f"{casename}.yml", "-vv"]
     if jobname is not None:
         args.append("--jobname")
         args.append(jobname)

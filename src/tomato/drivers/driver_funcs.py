@@ -58,8 +58,7 @@ def tomato_job() -> None:
     logger.debug("setting logger verbosity to '%s'", verbosity)
     logger.setLevel(loglevel)
 
-    # pid = os.getpid()
-    pid = os.getppid()  # On Windows, the parent is the tomato_job.exe
+    pid = os.getppid() if subprocess._mswindows else os.getpid()  # On Windows, the parent is the tomato_job.exe
 
     logger.debug(f"assigning job '{jobid}' on pid '{pid}' into pipeline '{pip}'")
     dbhandler.pipeline_assign_job(state["path"], pip, jobid, pid, type=state["type"])

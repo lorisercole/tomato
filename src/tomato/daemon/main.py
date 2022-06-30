@@ -51,10 +51,10 @@ def main_loop(settings: dict, pipelines: dict, test: bool = False) -> None:
         for pip, jobid, pid in ret:
             log.debug(f"checking PID of running job '{jobid}'")
             if psutil.pid_exists(pid) and "tomato_job" in psutil.Process(pid).name():
-                log.debug(f"PID of running job '{jobid}' found")
+                log.debug(f"PID {pid} of running job '{jobid}' found")
                 # dbhandler.job_set_status(queue, "r", jobid)
             else:
-                log.debug(f"PID of running job '{jobid}' not found")
+                log.debug(f"PID {pid} of running job '{jobid}' not found")
                 dbhandler.pipeline_reset_job(stp, pip, False, type=stt)
                 dbhandler.job_set_status(qup, "ce", jobid, type=qut)
                 dbhandler.job_set_time(qup, "completed_at", jobid, type=qut)
@@ -87,12 +87,15 @@ def main_loop(settings: dict, pipelines: dict, test: bool = False) -> None:
                         jpath = os.path.join(root, "jobdata.json")
                         with open(jpath, "w") as of:
                             json.dump(args, of, indent=1)
-                        cfs = subprocess.CREATE_NO_WINDOW
-                        if not test:
-                            cfs |= subprocess.CREATE_NEW_PROCESS_GROUP
-                        subprocess.Popen(
-                            ["tomato_job", str(jpath)],
-                            creationflags=cfs,
-                        )
+                        if subprocess._mswindows:
+                            cfs = subprocess.CREATE_NO_WINDOW
+                            if not test:
+                                cfs |= subprocess.CREATE_NEW_PROCESS_GROUP
+                            subprocess.Popen(
+                                ["tomato_job", str(jpath)],
+                                creationflags=cfs,
+                            )
+                        else:
+                            subprocess.Popen(["tomato_job", str(jpath)], preexec_fn=os.setpgrp, close_fds=True)
                         break
         time.sleep(settings.get("main loop", 1))
