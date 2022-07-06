@@ -4,7 +4,7 @@ import psutil
 import signal
 import os
 
-def run_casename(casename: str, jobname: str = None) -> str:
+def run_casename(casename: str, jobname: str = None, inter_func: callable = None) -> str:
     if subprocess._mswindows:
         cfg = subprocess.CREATE_NEW_PROCESS_GROUP
         proc = subprocess.Popen(["tomato", "-t", "-vv"], creationflags=cfg)
@@ -21,6 +21,9 @@ def run_casename(casename: str, jobname: str = None) -> str:
     print(args)
     subprocess.run(args)
     subprocess.run(["ketchup", "-t", "ready", "dummy-10", "-vv"])
+
+    if inter_func:
+        inter_func()
 
     while True:
         ret = subprocess.run(
@@ -44,3 +47,8 @@ def run_casename(casename: str, jobname: str = None) -> str:
         cp.send_signal(signal.SIGTERM)
     proc.terminate()
     return status
+
+def kill_job():
+    print('Sleeping 2 seconds...')
+    time.sleep(2)
+    subprocess.run(["ketchup", "-t", "cancel", "1", "-vv"])
