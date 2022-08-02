@@ -76,6 +76,7 @@ def test_run_dummy_jobname(casename, jobname, datadir):
         if line.startswith("jobname"):
             assert line.split("=")[1].strip() == jobname
 
+
 @pytest.mark.parametrize(
     "casename",
     [
@@ -86,3 +87,21 @@ def test_run_dummy_cancel(casename, datadir):
     os.chdir(datadir)
     status = utils.run_casename(casename, inter_func=utils.cancel_job)
     assert status == "cd"
+
+
+@pytest.mark.parametrize(
+    "casename, external",
+    [
+        ("dummy_sequential_20_10", True),
+        ("dummy_sequential_snapshot_30_5", False),
+    ],
+)
+def test_run_dummy_snapshot(casename, external, datadir):
+    os.chdir(datadir)
+    if external:
+        status = utils.run_casename(casename, inter_func=utils.snapshot_job)
+    else:
+        status = utils.run_casename(casename)
+    assert status == "c"
+    assert os.path.exists("snapshot.1.json")
+    assert os.path.exists("snapshot.1.zip")
