@@ -4,6 +4,7 @@ import yaml
 import logging
 import signal
 import psutil
+import subprocess
 from argparse import Namespace
 from pathlib import Path
 from dgbowl_schemas.tomato import to_payload
@@ -221,7 +222,7 @@ def cancel(args: Namespace) -> None:
 
     """
     def kill_tomato_job(proc):
-        if "tomato_job" in proc.name():
+        if subprocess._mswindows or "tomato_job" in proc.name():
             log.debug(
                 "sending SIGTERM to pid %d with name '%s'",
                 proc.pid,
@@ -246,11 +247,11 @@ def cancel(args: Namespace) -> None:
             if pjobid == jobid:
                 log.warning(f"cancelling a running job {jobid} with pid {pid}")
                 proc = psutil.Process(pid=pid)
-                log.warning(f"children = {proc.children()}")
                 for cp in proc.children():
-                    if cp.name() in {"python", "python.exe"}:  # windows
-                        for ccp in cp.children():
-                            kill_tomato_job(ccp)
+                    if subprocess._mswindows:
+                        if cp.name() in {"python", "python.exe"}:  # windows
+                            for ccp in cp.children():
+                                kill_tomato_job(ccp)
                     else:  # linux
                         kill_tomato_job(cp)
 

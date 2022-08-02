@@ -4,7 +4,9 @@ import psutil
 import signal
 import os
 
-def run_casename(casename: str, jobname: str = None, inter_func: callable = None) -> str:
+def run_casename(
+    casename: str, jobname: str = None, inter_func: callable = None
+) -> str:
     if subprocess._mswindows:
         cfg = subprocess.CREATE_NEW_PROCESS_GROUP
         proc = subprocess.Popen(["tomato", "-t", "-vv"], creationflags=cfg)
@@ -22,8 +24,7 @@ def run_casename(casename: str, jobname: str = None, inter_func: callable = None
     subprocess.run(args)
     subprocess.run(["ketchup", "-t", "ready", "dummy-10", "-vv"])
 
-    if inter_func:
-        inter_func()
+    inter_exec = True if inter_func is not None else False
 
     while True:
         ret = subprocess.run(
@@ -38,8 +39,10 @@ def run_casename(casename: str, jobname: str = None, inter_func: callable = None
                 if status.startswith("c"):
                     end = True
                     break
-                else:
-                    time.sleep(0.1)
+                elif status.startswith("r") and inter_exec:
+                    inter_func()
+                    inter_exec = False
+                time.sleep(0.1)
         if end:
             break
 
@@ -48,7 +51,7 @@ def run_casename(casename: str, jobname: str = None, inter_func: callable = None
     proc.terminate()
     return status
 
-def kill_job():
-    print('Sleeping 2 seconds...')
+
+def cancel_job(jobid: int = 1):
     time.sleep(2)
-    subprocess.run(["ketchup", "-t", "cancel", "1", "-vv"])
+    subprocess.run(["ketchup", "-t", "cancel", f"{jobid}", "-vv"])
