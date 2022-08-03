@@ -1,7 +1,7 @@
 name: push-master
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'linux']
 jobs:
   build:
     runs-on: windows-latest
@@ -20,7 +20,7 @@ jobs:
           path: dist
   test:
     needs: [build]
-    runs-on: windows-latest
+    runs-on: [windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v2
         with:
